@@ -62,3 +62,10 @@ def _add_early_wp_gain(early_timeouts: pd.DataFrame) -> pd.DataFrame:
     result = early_timeouts.copy()
     result["wp_gain_early"] = wp.iloc[:n].values - wp.iloc[n:].values
     return result
+
+
+def save_scores(scores: pd.DataFrame, path: str = "data/processed/timeout_scores.parquet") -> None:
+    """Persist TimeoutScore records for downstream analysis."""
+    from pathlib import Path
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    scores.to_parquet(path, index=False)
