@@ -1,5 +1,4 @@
 """Fetch NFL play-by-play data and cache locally as parquet."""
-import importlib
 import pandas as pd
 from pathlib import Path
 
@@ -12,6 +11,7 @@ except ModuleNotFoundError:
 
 CACHE_DIR = Path("data/processed")
 REQUIRED_FIELDS = ["wp", "half_seconds_remaining", "posteam_timeouts_remaining"]
+MISSING_FIELD_THRESHOLD = 0.05
 
 
 def load_seasons(seasons: list[int], force_refresh: bool = False) -> pd.DataFrame:
@@ -52,7 +52,7 @@ def _validate(pbp: pd.DataFrame, seasons: list[int]) -> None:
     for season in seasons:
         season_df = pbp[pbp["season"] == season]
         missing_rate = season_df[REQUIRED_FIELDS].isna().any(axis=1).mean()
-        if missing_rate > 0.05:
+        if missing_rate > MISSING_FIELD_THRESHOLD:
             print(
                 f"Warning: season {season} has {missing_rate:.1%} plays "
                 "missing required fields"
