@@ -12,6 +12,7 @@ def early_timeout():
         "play_id": 200,
         "season": 2023,
         "posteam": "KC",
+        "home_team": "DET",
         "qtr": 1,
         "half_seconds_remaining": 1500,
         "game_seconds_remaining": 3300,

@@ -11,6 +11,7 @@ def early_timeouts():
         "play_id": [200],
         "season": [2023],
         "posteam": ["KC"],
+        "home_team": ["DET"],
         "coach": ["Andy Reid"],
         "qtr": [1],
         "half_seconds_remaining": [1500],

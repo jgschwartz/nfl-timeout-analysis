@@ -10,6 +10,7 @@ def sample_pbp():
         "play_id": [100, 200, 300, 400, 500, 600],
         "season": [2023] * 6,
         "posteam": ["KC"] * 6,
+        "home_team": ["DET"] * 6,
         "defteam": ["DET"] * 6,
         "coach": ["Andy Reid"] * 6,
         "qtr": [1, 1, 2, 2, 3, 3],

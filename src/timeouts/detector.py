@@ -6,7 +6,7 @@ GOAL_LINE_THRESHOLD = 5      # yards to end zone; inside this = strategic timeou
 INJURY_PATTERN = r"(?i)\binjury\b"
 
 _OUTPUT_COLS = [
-    "game_id", "play_id", "season", "posteam", "coach",
+    "game_id", "play_id", "season", "posteam", "home_team", "coach",
     "qtr", "half_seconds_remaining", "game_seconds_remaining",
     "score_differential", "down", "ydstogo", "yardline_100",
     "posteam_timeouts_remaining", "defteam_timeouts_remaining",

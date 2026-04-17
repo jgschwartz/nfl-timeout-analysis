@@ -19,6 +19,7 @@ def full_pbp():
         "play_id": [100, 200, 300, 400, 500, 600, 700, 800],
         "season": [2023] * 8,
         "posteam": ["KC"] * 8,
+        "home_team": ["DET"] * 8,
         "defteam": ["DET"] * 8,
         "coach": ["Andy Reid"] * 8,
         "qtr": [1] * 8,
