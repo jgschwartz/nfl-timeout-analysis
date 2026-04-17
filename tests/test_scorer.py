@@ -39,43 +39,43 @@ def opportunities():
     })
 
 
-def test_has_required_columns(early_timeouts, opportunities, sample_pbp):
+def test_has_required_columns(early_timeouts, opportunities):
     fake_wp = pd.Series([0.55, 0.52])  # avoided-penalty, with-penalty
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp):
-        result = score_timeouts(early_timeouts, sample_pbp, opportunities)
+        result = score_timeouts(early_timeouts, opportunities)
     for col in ["play_id", "wp_gain_early", "best_opportunity_value",
                 "best_opportunity_play_id", "best_opportunity_time",
                 "opportunity_cost", "verdict"]:
         assert col in result.columns, f"Missing: {col}"
 
 
-def test_best_opportunity_is_maximum(early_timeouts, opportunities, sample_pbp):
+def test_best_opportunity_is_maximum(early_timeouts, opportunities):
     fake_wp = pd.Series([0.55, 0.52])
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp):
-        result = score_timeouts(early_timeouts, sample_pbp, opportunities)
+        result = score_timeouts(early_timeouts, opportunities)
     assert result.iloc[0]["best_opportunity_play_id"] == 400
     assert result.iloc[0]["best_opportunity_value"] == pytest.approx(0.08)
 
 
-def test_opportunity_cost_calculation(early_timeouts, opportunities, sample_pbp):
+def test_opportunity_cost_calculation(early_timeouts, opportunities):
     # wp_gain_early = 0.55 - 0.52 = 0.03; best_opp = 0.08; cost = 0.08 - 0.03 = 0.05
     fake_wp = pd.Series([0.55, 0.52])
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp):
-        result = score_timeouts(early_timeouts, sample_pbp, opportunities)
+        result = score_timeouts(early_timeouts, opportunities)
     assert result.iloc[0]["opportunity_cost"] == pytest.approx(0.05)
 
 
-def test_verdict_justified(early_timeouts, opportunities, sample_pbp):
+def test_verdict_justified(early_timeouts, opportunities):
     # wp_gain_early = 0.10 > 0.08 best_opp → cost < 0 → justified
     fake_wp = pd.Series([0.60, 0.50])
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp):
-        result = score_timeouts(early_timeouts, sample_pbp, opportunities)
+        result = score_timeouts(early_timeouts, opportunities)
     assert result.iloc[0]["verdict"] == "justified"
 
 
-def test_verdict_wasteful(early_timeouts, opportunities, sample_pbp):
+def test_verdict_wasteful(early_timeouts, opportunities):
     # wp_gain_early = 0.03 < 0.08 best_opp → cost > 0 → wasteful
     fake_wp = pd.Series([0.55, 0.52])
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp):
-        result = score_timeouts(early_timeouts, sample_pbp, opportunities)
+        result = score_timeouts(early_timeouts, opportunities)
     assert result.iloc[0]["verdict"] == "wasteful"

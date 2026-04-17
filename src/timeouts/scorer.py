@@ -1,11 +1,11 @@
 """Pair each EarlyTimeout with its best opportunity and compute opportunity cost."""
 import pandas as pd
+from pathlib import Path
 from src.wp.calculator import calculate_wp, WP_INPUT_COLS
 
 
 def score_timeouts(
     early_timeouts: pd.DataFrame,
-    pbp: pd.DataFrame,
     opportunities: pd.DataFrame,
 ) -> pd.DataFrame:
     """
@@ -66,6 +66,5 @@ def _add_early_wp_gain(early_timeouts: pd.DataFrame) -> pd.DataFrame:
 
 def save_scores(scores: pd.DataFrame, path: str = "data/processed/timeout_scores.parquet") -> None:
     """Persist TimeoutScore records for downstream analysis."""
-    from pathlib import Path
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     scores.to_parquet(path, index=False)

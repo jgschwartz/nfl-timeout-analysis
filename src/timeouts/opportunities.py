@@ -39,6 +39,9 @@ def _opportunities_for_timeout(pbp: pd.DataFrame, timeout: pd.Series) -> pd.Data
 
     actual = remaining[WP_INPUT_COLS].copy()
 
+    prev_game_sec = remaining["game_seconds_remaining"].shift(
+        1, fill_value=timeout["game_seconds_remaining"]
+    )
     counterfactual = actual.copy()
     counterfactual["posteam_timeouts_remaining"] = (
         remaining["posteam_timeouts_remaining"] + 1
@@ -48,7 +51,7 @@ def _opportunities_for_timeout(pbp: pd.DataFrame, timeout: pd.Series) -> pd.Data
     ).clip(upper=prev_half_sec.values)
     counterfactual["game_seconds_remaining"] = (
         remaining["game_seconds_remaining"] + remaining["clock_runoff"]
-    )
+    ).clip(upper=prev_game_sec.values)
 
     n = len(remaining)
     combined = pd.concat([actual, counterfactual], ignore_index=True)

@@ -28,6 +28,7 @@ def detect_early_timeouts(pbp: pd.DataFrame) -> pd.DataFrame:
         & (pbp["half_seconds_remaining"] > EARLY_HALF_THRESHOLD)
         & (pbp["down"] != 4)
         & (pbp["yardline_100"] > GOAL_LINE_THRESHOLD)
+        & (pbp["qtr"] <= 4)
         & ~pbp["desc"].str.contains(INJURY_PATTERN, regex=True, na=False)
     )
 

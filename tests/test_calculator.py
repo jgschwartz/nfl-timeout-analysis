@@ -1,14 +1,7 @@
 from unittest.mock import patch, MagicMock, PropertyMock
 import pandas as pd
 import pytest
-
-
-WP_COLS = [
-    "score_differential", "half_seconds_remaining", "game_seconds_remaining",
-    "down", "ydstogo", "yardline_100",
-    "posteam_timeouts_remaining", "defteam_timeouts_remaining",
-    "receive_2h_ko", "spread_line",
-]
+from src.wp.calculator import WP_INPUT_COLS
 
 
 @pytest.fixture

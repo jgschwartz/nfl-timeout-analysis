@@ -9,7 +9,7 @@ try:
 except ModuleNotFoundError:
     nflreadpy = None  # type: ignore[assignment]
 
-CACHE_DIR = Path("data/processed")
+CACHE_DIR = Path(__file__).parent.parent.parent / "data" / "processed"
 REQUIRED_FIELDS = ["wp", "half_seconds_remaining", "posteam_timeouts_remaining"]
 MISSING_FIELD_THRESHOLD = 0.05
 

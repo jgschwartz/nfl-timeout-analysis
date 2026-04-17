@@ -59,7 +59,7 @@ def test_full_pipeline_produces_scored_record(full_pbp):
     assert (opps["ref_timeout_play_id"] == 200).all()
 
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp_score):
-        scores = score_timeouts(early, full_pbp, opps)
+        scores = score_timeouts(early, opps)
 
     assert len(scores) == 1
     assert scores.iloc[0]["verdict"] in {"justified", "wasteful"}
@@ -77,6 +77,6 @@ def test_full_pipeline_verdict_is_justified_when_early_gain_exceeds_best_opp(ful
         opps = compute_all_opportunities(full_pbp, early)
 
     with patch("src.timeouts.scorer.calculate_wp", return_value=fake_wp_score):
-        scores = score_timeouts(early, full_pbp, opps)
+        scores = score_timeouts(early, opps)
 
     assert scores.iloc[0]["verdict"] == "justified"
