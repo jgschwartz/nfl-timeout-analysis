@@ -10,10 +10,21 @@ try:
             ["Rscript", "-e", "cat(R.home())"], text=True
         ).strip()
 
-    import rpy2.robjects as _ro
-    from rpy2.robjects import pandas2ri
-    from rpy2.robjects.conversion import localconverter
-    from rpy2.robjects.packages import importr
+    # rpy2 prints "Error importing in API mode / Trying to import in ABI mode"
+    # to C-level stderr when Homebrew R is used instead of CRAN's framework.
+    # Redirect fd 2 at the OS level during import to suppress this noise.
+    _devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    _saved_stderr_fd = os.dup(2)
+    os.dup2(_devnull_fd, 2)
+    try:
+        import rpy2.robjects as _ro
+        from rpy2.robjects import pandas2ri
+        from rpy2.robjects.conversion import localconverter
+        from rpy2.robjects.packages import importr
+    finally:
+        os.dup2(_saved_stderr_fd, 2)
+        os.close(_saved_stderr_fd)
+        os.close(_devnull_fd)
 except ModuleNotFoundError:
     _ro = None  # type: ignore
     pandas2ri = None  # type: ignore

@@ -20,12 +20,12 @@ def load_seasons(seasons: list[int], force_refresh: bool = False) -> pd.DataFram
     if cache_path.exists() and not force_refresh:
         return pd.read_parquet(cache_path)
 
+    # nflreadpy returns Polars DataFrames; convert to pandas before concatenating.
     pbp = pd.concat(
-        [nflreadpy.load_pbp([s]) for s in seasons],
+        [_to_pandas(nflreadpy.load_pbp([s])) for s in seasons],
         ignore_index=True,
     )
-    schedules = nflreadpy.load_schedules(seasons)
-    pbp = _join_coaches(pbp, schedules)
+    pbp = _add_coach(pbp)
     _validate(pbp, seasons)
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -33,18 +33,19 @@ def load_seasons(seasons: list[int], force_refresh: bool = False) -> pd.DataFram
     return pbp
 
 
-def _join_coaches(pbp: pd.DataFrame, schedules: pd.DataFrame) -> pd.DataFrame:
-    """Add `coach` column (head coach of the possession team) from schedules."""
-    sched = (
-        schedules[["game_id", "home_team", "away_team", "home_coach", "away_coach"]]
-        .rename(columns={"home_team": "sched_home_team", "away_team": "sched_away_team"})
-    )
-    merged = pbp.merge(sched, on="game_id", how="left")
-    merged["coach"] = merged.apply(
-        lambda r: r["home_coach"] if r["posteam"] == r["sched_home_team"] else r["away_coach"],
+def _to_pandas(df) -> pd.DataFrame:
+    """Convert a Polars DataFrame to pandas if needed; pass pandas through unchanged."""
+    return df.to_pandas() if hasattr(df, "to_pandas") else df
+
+
+def _add_coach(pbp: pd.DataFrame) -> pd.DataFrame:
+    """Add `coach` column from the home_coach/away_coach columns already in PBP."""
+    pbp = pbp.copy()
+    pbp["coach"] = pbp.apply(
+        lambda r: r["home_coach"] if r["posteam"] == r["home_team"] else r["away_coach"],
         axis=1,
     )
-    return merged.drop(columns=["home_coach", "away_coach", "sched_home_team", "sched_away_team"])
+    return pbp
 
 
 def _validate(pbp: pd.DataFrame, seasons: list[int]) -> None:
