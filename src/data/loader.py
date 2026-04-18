@@ -1,4 +1,5 @@
 """Fetch NFL play-by-play data and cache locally as parquet."""
+import time
 import pandas as pd
 from pathlib import Path
 
@@ -12,25 +13,47 @@ except ModuleNotFoundError:
 CACHE_DIR = Path(__file__).parent.parent.parent / "data" / "processed"
 REQUIRED_FIELDS = ["wp", "half_seconds_remaining", "posteam_timeouts_remaining"]
 MISSING_FIELD_THRESHOLD = 0.05
+DOWNLOAD_RETRIES = 3
+RETRY_BACKOFF = 5.0  # seconds; doubles on each retry
 
 
 def load_seasons(seasons: list[int], force_refresh: bool = False) -> pd.DataFrame:
-    """Load PBP for given seasons from cache or nflreadpy, with coach joined."""
-    cache_path = CACHE_DIR / f"pbp_{min(seasons)}_{max(seasons)}.parquet"
+    """Load PBP for given seasons from per-season parquet cache or nflreadpy."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    frames = [_load_one_season(s, force_refresh) for s in seasons]
+    pbp = pd.concat(frames, ignore_index=True)
+    _validate(pbp, seasons)
+    return pbp
+
+
+def _load_one_season(season: int, force_refresh: bool) -> pd.DataFrame:
+    """Load a single season from cache, downloading with retries if needed."""
+    cache_path = CACHE_DIR / f"pbp_{season}.parquet"
     if cache_path.exists() and not force_refresh:
         return pd.read_parquet(cache_path)
 
-    # nflreadpy returns Polars DataFrames; convert to pandas before concatenating.
-    pbp = pd.concat(
-        [_to_pandas(nflreadpy.load_pbp([s])) for s in seasons],
-        ignore_index=True,
-    )
-    pbp = _add_coach(pbp)
-    _validate(pbp, seasons)
+    df = _download_with_retry(season)
+    df = _add_coach(df)
+    df.to_parquet(cache_path)
+    return df
 
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    pbp.to_parquet(cache_path)
-    return pbp
+
+def _download_with_retry(season: int) -> pd.DataFrame:
+    """Download one season's PBP from nflreadpy, retrying on connection errors."""
+    backoff = RETRY_BACKOFF
+    for attempt in range(1, DOWNLOAD_RETRIES + 1):
+        try:
+            return _to_pandas(nflreadpy.load_pbp([season]))
+        except Exception as exc:
+            if attempt == DOWNLOAD_RETRIES:
+                raise
+            print(
+                f"Download failed for {season} "
+                f"(attempt {attempt}/{DOWNLOAD_RETRIES}): {exc}. "
+                f"Retrying in {backoff:.0f}s…"
+            )
+            time.sleep(backoff)
+            backoff *= 2
 
 
 def _to_pandas(df) -> pd.DataFrame:
