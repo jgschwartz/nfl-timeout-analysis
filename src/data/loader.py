@@ -33,7 +33,7 @@ def _load_one_season(season: int, force_refresh: bool) -> pd.DataFrame:
         return pd.read_parquet(cache_path)
 
     df = _download_with_retry(season)
-    df = _add_coach(df)
+    df = _add_derived_columns(df)
     df.to_parquet(cache_path)
     return df
 
@@ -61,13 +61,25 @@ def _to_pandas(df) -> pd.DataFrame:
     return df.to_pandas() if hasattr(df, "to_pandas") else df
 
 
-def _add_coach(pbp: pd.DataFrame) -> pd.DataFrame:
-    """Add `coach` column from the home_coach/away_coach columns already in PBP."""
+def _add_derived_columns(pbp: pd.DataFrame) -> pd.DataFrame:
+    """Add columns needed downstream that aren't directly in the nflverse PBP."""
     pbp = pbp.copy()
+
+    # Coach of the possession team.
     pbp["coach"] = pbp.apply(
         lambda r: r["home_coach"] if r["posteam"] == r["home_team"] else r["away_coach"],
         axis=1,
     )
+
+    # nflfastR needs receive_2h_ko but nflverse PBP only has home_opening_kickoff.
+    # Whoever received the opening kick kicks off in the 2nd half, so:
+    #   home_opening_kickoff=1 → home kicks off 2H → away posteam gets receive_2h_ko=1
+    #   home_opening_kickoff=0 → away kicks off 2H → home posteam gets receive_2h_ko=1
+    pbp["receive_2h_ko"] = (
+        ((pbp["home_opening_kickoff"] == 1) & (pbp["posteam"] != pbp["home_team"])) |
+        ((pbp["home_opening_kickoff"] == 0) & (pbp["posteam"] == pbp["home_team"]))
+    ).astype(int)
+
     return pbp
 
 

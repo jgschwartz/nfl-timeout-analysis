@@ -16,6 +16,7 @@ def pbp_df():
         "away_team": ["KC", "KC"],
         "home_coach": ["Dan Campbell", "Dan Campbell"],
         "away_coach": ["Andy Reid", "Andy Reid"],
+        "home_opening_kickoff": [1.0, 1.0],
         "wp": [0.55, 0.60],
         "half_seconds_remaining": [1800, 1750],
         "posteam_timeouts_remaining": [3, 3],
